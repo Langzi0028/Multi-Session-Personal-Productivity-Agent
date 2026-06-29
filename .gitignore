@@ -1,0 +1,79 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local runtime data
+*.db
+*.db-*
+agent_runtime.db
+vector_store/
+chroma/
+*.sqlite
+*.sqlite3
+
+# Frontend dependencies / build output
+node_modules/
+front-end/node_modules/
+front-end/dist/
+front-end/.vite/
+
+# Local Node/npm caches
+nodejs/
+node_cache/
+.npm/
+.pnpm-store/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs / temporary output
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+
+# Local E2E/debug artifacts
+e2e-session-debug.json
+isolated-e2e-api-results.json
+slow-e2e-setup.json
+slow-e2e-active.json
+.playwright-mcp/
+
+# Project memory and local assistant artifacts
+memory/
+.claude/
+
+# Extra design/source notes not required for GitHub delivery
+开发文档.md
+
+# Keep deliverable docs only
+# README.md is intentionally tracked.
+# docs/ai_prompt_and_problem_solving.md is intentionally tracked.
+docs/*
+!docs/
+!docs/ai_prompt_and_problem_solving.md
