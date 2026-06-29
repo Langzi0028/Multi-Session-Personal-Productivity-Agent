@@ -96,7 +96,18 @@ npm --prefix front-end install
 
 ## 5. 后端运行方式
 
-### 5.1 真实 LLM 后端
+### 5.1 一键启动前后端
+
+服务器或本地已有依赖后，可以直接启动前后端：
+
+```bash
+chmod +x start_all.sh
+./start_all.sh
+```
+
+脚本会优先使用 `.venv/bin/python`，没有 `.venv` 时自动使用系统 `python3`；同时启动后端 `start_server.py` 和前端 Vite dev server。
+
+### 5.2 真实 LLM 后端
 
 后端服务会读取本地 `.env`，并通过 OpenAI-compatible `/chat/completions` 接口调用模型。
 
@@ -123,6 +134,12 @@ MEMORY_EXTRACTOR_MAX_INPUT_CHARS=6000
 python start_server.py
 ```
 
+也可以直接用 uvicorn 启动 FastAPI app：
+
+```bash
+uvicorn app.main:app --reload
+```
+
 默认监听：
 
 ```text
@@ -137,6 +154,12 @@ http://127.0.0.1:8000
 
 ```bash
 npm --prefix front-end run dev -- --host 127.0.0.1
+```
+
+如果已经在 `front-end/` 目录内，也可以运行：
+
+```bash
+npm run dev
 ```
 
 然后打开 Vite 输出的地址，例如：

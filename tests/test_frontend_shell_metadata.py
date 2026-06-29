@@ -16,4 +16,5 @@ def test_root_readme_documents_frontend_integration_startup():
 
     assert "front-end" in readme
     assert "npm run dev" in readme
-    assert "start_manual_demo.py" in readme
+    assert "start_server.py" in readme
+    assert "start_all.sh" in readme

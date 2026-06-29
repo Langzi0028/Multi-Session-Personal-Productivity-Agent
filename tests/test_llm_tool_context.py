@@ -143,3 +143,7 @@ def test_openai_client_system_prompt_tells_model_to_use_available_tools():
     assert "tool_call" in system_prompt
     assert "工具参数" in system_prompt
     assert "不能直接回答无法获取" in system_prompt
+    assert "relevant_long_term_memory" in system_prompt
+    assert "user_profile" in system_prompt
+    assert "semantic_memory" in system_prompt
+    assert "episodic_memory" in system_prompt

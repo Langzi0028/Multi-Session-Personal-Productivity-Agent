@@ -7,10 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_submission_documents_exist_and_mention_real_commands():
     files = [
         ROOT / "README.md",
-        ROOT / "docs" / "design.md",
-        ROOT / "docs" / "prompts.md",
-        ROOT / "docs" / "problem_solving_log.md",
-        ROOT / "docs" / "demo_script.md",
+        ROOT / "docs" / "ai_prompt_and_problem_solving.md",
+        ROOT / "docs" / "demo_questions_expected.md",
     ]
     for file in files:
         assert file.exists()
@@ -28,7 +26,11 @@ def test_submission_documents_exist_and_mention_real_commands():
     assert "Authorization: Bearer" in readme
     assert "GET /sessions" in readme
 
-    demo = (ROOT / "docs" / "demo_script.md").read_text(encoding="utf-8")
-    assert "/auth/register" in demo
-    assert "Authorization: Bearer" in demo
-    assert "GET /sessions" in demo
+    prompt_doc = (ROOT / "docs" / "ai_prompt_and_problem_solving.md").read_text(encoding="utf-8")
+    assert "Runtime" in prompt_doc
+    assert "Prompt" in prompt_doc
+    assert "问题解决" in prompt_doc
+
+    demo_questions = (ROOT / "docs" / "demo_questions_expected.md").read_text(encoding="utf-8")
+    assert "提问" in demo_questions
+    assert "应该回答" in demo_questions
