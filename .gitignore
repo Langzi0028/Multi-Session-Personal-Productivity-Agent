@@ -65,8 +65,8 @@ slow-e2e-active.json
 .playwright-mcp/
 
 # Project memory and local assistant artifacts
-memory/
-.claude/
+/memory/
+/.claude/
 
 # Extra scripts / design notes not required for GitHub delivery
 manual_memory_check.py
