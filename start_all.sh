@@ -22,11 +22,17 @@ if [[ ! -f ".env" ]]; then
   exit 1
 fi
 
-if [[ ! -d ".venv" ]]; then
-  echo "ERROR: .venv not found. Run these once first:" >&2
-  echo "  python3 -m venv .venv" >&2
-  echo "  source .venv/bin/activate" >&2
-  echo "  python -m pip install -r requirements.txt" >&2
+if [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
+  PYTHON_CMD="$ROOT_DIR/.venv/bin/python"
+else
+  PYTHON_CMD="${PYTHON_CMD:-python3}"
+fi
+
+if ! "$PYTHON_CMD" -c "import fastapi, uvicorn, pydantic, httpx" >/dev/null 2>&1; then
+  echo "ERROR: Python dependencies are not installed for: $PYTHON_CMD" >&2
+  echo "Install them with one of:" >&2
+  echo "  python3 -m pip install -r requirements.txt" >&2
+  echo "  python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt" >&2
   exit 1
 fi
 
@@ -44,8 +50,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting backend: http://127.0.0.1:${BACKEND_PORT}"
-"$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/start_server.py" &
+echo "Starting backend with $PYTHON_CMD: http://127.0.0.1:${BACKEND_PORT}"
+"$PYTHON_CMD" "$ROOT_DIR/start_server.py" &
 BACKEND_PID=$!
 
 sleep 2
