@@ -62,11 +62,6 @@ front-end/
 └── package.json
 
 docs/
-├── design.md
-├── manual_test.md
-├── demo_script.md
-├── prompts.md
-├── problem_solving_log.md
 └── ai_prompt_and_problem_solving.md
 
 tests/                     # 后端、runtime、memory、frontend config 回归测试
@@ -101,23 +96,9 @@ npm --prefix front-end install
 
 ## 5. 后端运行方式
 
-### 5.1 确定性 Demo 后端（推荐先用）
+### 5.1 真实 LLM 后端
 
-不需要真实 API Key，不消耗模型调用，使用 scripted LLM 响应，适合本地演示和前端联调。
-
-```bash
-python start_manual_demo.py
-```
-
-默认监听：
-
-```text
-http://127.0.0.1:8000
-```
-
-### 5.2 真实 LLM 后端
-
-真实服务会读取本地 `.env`，并通过 OpenAI-compatible `/chat/completions` 接口调用模型。
+后端服务会读取本地 `.env`，并通过 OpenAI-compatible `/chat/completions` 接口调用模型。
 
 创建 `.env`：
 
@@ -136,10 +117,16 @@ MEMORY_EXTRACTOR_MAX_INPUT_CHARS=6000
 
 注意：不要把真实 API Key 提交到仓库，也不要写入文档、日志或 memory。
 
-启动真实服务：
+启动服务：
 
 ```bash
 python start_server.py
+```
+
+默认监听：
+
+```text
+http://127.0.0.1:8000
 ```
 
 ---

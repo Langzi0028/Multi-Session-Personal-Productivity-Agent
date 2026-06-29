@@ -68,7 +68,9 @@ slow-e2e-active.json
 memory/
 .claude/
 
-# Extra design/source notes not required for GitHub delivery
+# Extra scripts / design notes not required for GitHub delivery
+manual_memory_check.py
+start_manual_demo.py
 开发文档.md
 
 # Keep deliverable docs only
