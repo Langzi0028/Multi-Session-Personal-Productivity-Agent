@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.contracts import MessageRole
 from app.memory.manager import MemoryManager
+from app.runtime.context_summarizer import ContextSummarizer, RuleBasedContextSummarizer
 from app.runtime.session_manager import SessionManager
 
 
@@ -11,23 +12,25 @@ class ContextManager:
         session_manager: SessionManager,
         recent_message_limit: int = 10,
         memory_manager: MemoryManager | None = None,
+        context_summarizer: ContextSummarizer | None = None,
     ) -> None:
         self.session_manager = session_manager
         self.recent_message_limit = recent_message_limit
         self.memory_manager = memory_manager
+        self.context_summarizer = context_summarizer or RuleBasedContextSummarizer()
 
     def compress_if_needed(self, user_id: str, session_id: str, max_message_count: int = 30) -> bool:
         state = self.session_manager.get_state(user_id, session_id)
-        if len(state.messages) <= max_message_count:
+        keep_count = max(1, self.recent_message_limit)
+        compression_threshold = min(max_message_count, keep_count)
+        if len(state.messages) <= compression_threshold:
             return False
 
-        keep_count = max(1, self.recent_message_limit)
         old_messages = state.messages[:-keep_count]
-        existing = state.session_summary.strip()
-        old_summary = "\n".join(
-            f"{message.role.value}: {message.content}" for message in old_messages
-        )
-        summary = f"{existing}\n{old_summary}".strip() if existing else old_summary
+        if not old_messages:
+            return False
+
+        summary = self.context_summarizer.summarize(state.session_summary.strip(), old_messages)
         self.session_manager.update_summary(user_id, session_id, summary)
         return True
 

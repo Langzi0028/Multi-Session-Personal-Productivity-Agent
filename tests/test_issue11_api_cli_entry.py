@@ -5,6 +5,7 @@ from app.config import Settings
 from app.main import app, build_default_runtime
 from app.memory.extractor import HeuristicMemoryExtractor, LLMMemoryExtractor
 from app.memory.manager import MemoryManager
+from app.runtime.context_summarizer import LLMContextSummarizer, RuleBasedContextSummarizer
 
 
 def test_default_runtime_wires_memory_manager():
@@ -13,6 +14,7 @@ def test_default_runtime_wires_memory_manager():
     assert isinstance(runtime.memory_manager, MemoryManager)
     assert runtime.context_manager.memory_manager is runtime.memory_manager
     assert isinstance(runtime.memory_manager.extractor, HeuristicMemoryExtractor)
+    assert isinstance(runtime.context_manager.context_summarizer, RuleBasedContextSummarizer)
 
 
 def test_real_runtime_wires_llm_memory_extractor_when_enabled():
@@ -27,12 +29,19 @@ def test_real_runtime_wires_llm_memory_extractor_when_enabled():
         memory_extractor_timeout_seconds=4.5,
         memory_extractor_model="memory-model",
         memory_extractor_max_input_chars=1234,
+        context_summarizer_mode="llm",
+        context_summarizer_timeout_seconds=5.5,
+        context_summarizer_model="summary-model",
+        context_summarizer_max_input_chars=2345,
+        context_summarizer_max_summary_chars=3456,
     )
 
     runtime = build_default_runtime(use_real_llm=True, settings=settings, enable_vector_store=False)
 
     assert isinstance(runtime.memory_manager.extractor, LLMMemoryExtractor)
     assert runtime.memory_manager.extractor.json_client is runtime.llm_client
+    assert isinstance(runtime.context_manager.context_summarizer, LLMContextSummarizer)
+    assert runtime.context_manager.context_summarizer.json_client is runtime.llm_client
 
 
 def test_fastapi_session_message_todo_and_trace_flow():

@@ -9,6 +9,7 @@ from app.llm.base import LLMClient
 from app.memory.manager import MemoryManager
 from app.runtime.action_parser import ActionParser, ActionParserError
 from app.runtime.context_manager import ContextManager
+from app.runtime.context_summarizer import ContextSummarizer
 from app.runtime.session_manager import SessionManager
 from app.runtime.trace_logger import TraceLogger
 from app.tools.registry import ToolRegistry, ToolRegistryError
@@ -29,6 +30,7 @@ class AgentRuntime:
         trace_logger: TraceLogger | None = None,
         max_steps: int = 5,
         memory_manager: MemoryManager | None = None,
+        context_summarizer: ContextSummarizer | None = None,
     ) -> None:
         self.session_manager = session_manager
         self.llm_client = llm_client
@@ -37,7 +39,11 @@ class AgentRuntime:
         self.trace_logger = trace_logger
         self.max_steps = max_steps
         self.memory_manager = memory_manager
-        self.context_manager = ContextManager(session_manager, memory_manager=memory_manager)
+        self.context_manager = ContextManager(
+            session_manager,
+            memory_manager=memory_manager,
+            context_summarizer=context_summarizer,
+        )
 
     def handle_user_message(self, user_id: str, session_id: str, content: str) -> AgentResult:
         """Run the fixed hand-rolled workflow for one user message."""

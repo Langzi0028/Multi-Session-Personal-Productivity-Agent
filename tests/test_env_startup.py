@@ -15,7 +15,12 @@ def test_load_dotenv_and_build_real_runtime_without_exposing_key(tmp_path, monke
         "MEMORY_EXTRACTOR_MODE=llm\n"
         "MEMORY_EXTRACTOR_TIMEOUT_SECONDS=4.5\n"
         "MEMORY_EXTRACTOR_MODEL=memory-model\n"
-        "MEMORY_EXTRACTOR_MAX_INPUT_CHARS=1234\n",
+        "MEMORY_EXTRACTOR_MAX_INPUT_CHARS=1234\n"
+        "CONTEXT_SUMMARIZER_MODE=llm\n"
+        "CONTEXT_SUMMARIZER_TIMEOUT_SECONDS=5.5\n"
+        "CONTEXT_SUMMARIZER_MODEL=summary-model\n"
+        "CONTEXT_SUMMARIZER_MAX_INPUT_CHARS=2345\n"
+        "CONTEXT_SUMMARIZER_MAX_SUMMARY_CHARS=3456\n",
         encoding="utf-8",
     )
     monkeypatch.delenv("OPENAI_API_BASE", raising=False)
@@ -28,6 +33,11 @@ def test_load_dotenv_and_build_real_runtime_without_exposing_key(tmp_path, monke
     monkeypatch.delenv("MEMORY_EXTRACTOR_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("MEMORY_EXTRACTOR_MODEL", raising=False)
     monkeypatch.delenv("MEMORY_EXTRACTOR_MAX_INPUT_CHARS", raising=False)
+    monkeypatch.delenv("CONTEXT_SUMMARIZER_MODE", raising=False)
+    monkeypatch.delenv("CONTEXT_SUMMARIZER_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("CONTEXT_SUMMARIZER_MODEL", raising=False)
+    monkeypatch.delenv("CONTEXT_SUMMARIZER_MAX_INPUT_CHARS", raising=False)
+    monkeypatch.delenv("CONTEXT_SUMMARIZER_MAX_SUMMARY_CHARS", raising=False)
 
     load_dotenv(env_file)
     settings = get_settings()
@@ -40,6 +50,11 @@ def test_load_dotenv_and_build_real_runtime_without_exposing_key(tmp_path, monke
     assert settings.memory_extractor_timeout_seconds == 4.5
     assert settings.memory_extractor_model == "memory-model"
     assert settings.memory_extractor_max_input_chars == 1234
+    assert settings.context_summarizer_mode == "llm"
+    assert settings.context_summarizer_timeout_seconds == 5.5
+    assert settings.context_summarizer_model == "summary-model"
+    assert settings.context_summarizer_max_input_chars == 2345
+    assert settings.context_summarizer_max_summary_chars == 3456
     assert runtime.max_steps == 3
     assert isinstance(runtime.llm_client, OpenAICompatibleClient)
     assert runtime.llm_client.model == "test-model"

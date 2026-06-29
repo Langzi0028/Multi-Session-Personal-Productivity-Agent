@@ -237,7 +237,7 @@ Authorization: Bearer <token>
 1. `ensure_session`：确认当前 `user_id + session_id` 存在。
 2. 设置 session 状态为 `running`。
 3. 保存用户消息到 SQLite。
-4. `ContextManager.compress_if_needed(...)`：必要时压缩旧消息到 session summary。
+4. `ContextManager.compress_if_needed(...)`：只要消息数超过最近消息窗口，就把窗口外旧消息压缩到 session summary；真实 LLM runtime 默认使用 LLM 压缩，失败时回退规则摘要。
 5. 构建 LLM context。
 6. 调用 `llm_client.complete(context)`。
 7. `ActionParser` 解析项目自有 JSON action。
@@ -465,12 +465,43 @@ AgentRuntime._build_llm_context(...)
    - 根据 Chroma hit 中的 SQLite id 回查 SQLite；
    - 再次校验 `user_id`；
    - 返回 semantic / episodic memory 内容。
-2. 如果 Chroma 不可用、失败或没有结果：
+2. 如果 Chroma 不可用、失败或对应类型结果不足：
    - 退回 SQLite 触发词召回；
-   - 触发词包括：`之前`、`上次`、`继续`、`还记得`、`过去`；
-   - 从当前用户的 semantic / episodic 表中按 id 取有限条数。
+   - semantic 触发词包括：`记住`、`偏好`、`项目`、`背景`、`重点`、`交付`、`技术栈` 等；
+   - episodic 触发词包括：`之前`、`上次`、`过去`、`问过`、`说过`、`聊过`、`做过` 等；
+   - `刚才` 被视为当前 session 短期语境，不触发跨 session episodic 召回；
+   - 从当前用户的 semantic / episodic 表中按关键词和最近记录排序取有限条数。
 
-### 9.5 Memory 放入上下文的位置
+### 9.5 Session 上下文压缩
+
+当前短期上下文窗口默认保留最近 10 条消息。为了避免“已有 15 条消息但压缩阈值 30，前 5 条既不在 recent messages 也不在 summary”的空窗，Runtime 在每次用户消息写入后都会检查：
+
+```text
+len(messages) > recent_message_limit
+```
+
+只要超过最近窗口，就把窗口外旧消息压缩进 `session_summary`，同时继续保留最近 10 条原文消息。
+
+真实 LLM runtime 默认使用 `LLMContextSummarizer`：
+
+```text
+ContextManager.compress_if_needed(...)
+  -> LLMContextSummarizer.summarize(existing_summary, old_messages)
+  -> OpenAICompatibleClient.complete_json(...)
+  -> SessionManager.update_summary(...)
+```
+
+压缩 prompt 要求只输出：
+
+```json
+{"summary":"..."}
+```
+
+摘要会保留用户目标、偏好、项目背景、待办线索、工具结果、关键事实、未完成事项和重要约束；同时要求不要保存 API key、token、password、secret、私钥等敏感内容。LLM 压缩失败时，会回退到 `RuleBasedContextSummarizer`，用规则方式把旧消息追加进 summary，保证旧上下文不会静默丢失。
+
+测试 / scripted runtime 默认使用规则摘要，避免单元测试依赖真实 LLM。
+
+### 9.6 Memory 放入上下文的位置
 
 `ContextManager.build_context(...)` 会生成以下 section：
 

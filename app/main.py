@@ -14,6 +14,7 @@ from app.memory.vector_store import ChromaVectorMemoryStore, NullVectorMemorySto
 from app.runtime.action_parser import ActionParser
 from app.runtime.auth_manager import AuthManager, AuthValidationError, DuplicateUsernameError
 from app.runtime.agent_runtime import AgentRuntime
+from app.runtime.context_summarizer import LLMContextSummarizer, RuleBasedContextSummarizer
 from app.runtime.async_manager import AsyncManager
 from app.runtime.session_manager import SessionManager
 from app.runtime.trace_logger import TraceLogger
@@ -60,6 +61,7 @@ def build_default_runtime(
         vector_store=_build_vector_store(settings) if use_vector_store else NullVectorMemoryStore(),
         extractor=_build_memory_extractor(settings, use_real_llm, llm_client),
     )
+    context_summarizer = _build_context_summarizer(settings, use_real_llm, llm_client)
     registry = ToolRegistry()
     registry.register(CalculatorTool())
     registry.register(WeatherTool())
@@ -74,6 +76,7 @@ def build_default_runtime(
         trace_logger=trace_logger,
         max_steps=settings.max_agent_steps,
         memory_manager=memory_manager,
+        context_summarizer=context_summarizer,
     )
     runtime.auth_manager = AuthManager(store)
     return runtime
@@ -92,6 +95,23 @@ def _build_memory_extractor(settings: Settings, use_real_llm: bool, llm_client):
         )
     except Exception:
         return HeuristicMemoryExtractor()
+
+
+def _build_context_summarizer(settings: Settings, use_real_llm: bool, llm_client):
+    fallback = RuleBasedContextSummarizer()
+    if not use_real_llm or settings.context_summarizer_mode.lower() != "llm":
+        return fallback
+    try:
+        return LLMContextSummarizer(
+            json_client=llm_client,
+            fallback=fallback,
+            model=settings.context_summarizer_model or settings.openai_model,
+            timeout_seconds=settings.context_summarizer_timeout_seconds,
+            max_input_chars=settings.context_summarizer_max_input_chars,
+            max_summary_chars=settings.context_summarizer_max_summary_chars,
+        )
+    except Exception:
+        return fallback
 
 
 def _build_vector_store(settings: Settings):

@@ -297,11 +297,14 @@ AgentRuntime._build_llm_context(...)
 1. Chroma 向量召回。
 2. 如果 Chroma 不可用、失败或无结果，则退回 SQLite 触发词召回。
 
-SQLite fallback 触发词包括：
+SQLite fallback 会按记忆类型区分触发词：
 
 ```text
-之前、上次、继续、还记得、过去
+semantic: 记住、偏好、项目、背景、重点、交付、技术栈 等
+episodic: 之前、上次、过去、问过、说过、聊过、做过 等
 ```
+
+其中 `刚才` 被视为当前 session 短期语境，不触发跨 session episodic 召回，避免新窗口询问“我刚才让你记了什么待办？”时拿到另一个 session 的 todo。
 
 ### 6.3 Memory 放入上下文的位置
 
@@ -334,6 +337,29 @@ available_tools
 ```
 
 最终发给模型的是结构化 JSON context，而不是把所有内容拼成一个不可区分的长 prompt。
+
+### 6.4 Session summary 压缩
+
+短期上下文默认只保留最近 10 条消息作为 `recent_messages`。现在的压缩策略是：只要当前 session 的消息数超过 `recent_message_limit`，就把窗口外旧消息压缩进 `session_summary`，避免“消息还没到旧阈值，但已经离开最近窗口”的空窗。
+
+真实 LLM runtime 默认使用 `LLMContextSummarizer`，输入给压缩模型的是：
+
+```json
+{
+  "existing_summary": "已有 session 摘要",
+  "messages": [
+    {"role": "user", "content": "即将离开 recent_messages 的旧消息"}
+  ]
+}
+```
+
+压缩模型必须只返回：
+
+```json
+{"summary":"更新后的完整 session_summary"}
+```
+
+压缩 prompt 要求保留用户目标、偏好、项目背景、待办线索、工具结果、关键事实、未完成事项和重要约束，并过滤 API key、token、password、secret、私钥等敏感信息。LLM 压缩失败时回退 `RuleBasedContextSummarizer`，保证旧消息不会静默丢失。测试 / scripted runtime 默认使用规则摘要，不依赖真实 LLM。
 
 ---
 
